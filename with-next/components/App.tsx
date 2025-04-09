@@ -7,6 +7,8 @@ import {
   verifySignedMessage
 } from "@suiet/wallet-kit";
 import { Transaction } from '@mysten/sui/transactions';
+import { Ed25519Keypair, Ed25519PublicKey } from '@mysten/sui/keypairs/ed25519';
+
 
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
 
@@ -68,10 +70,29 @@ function App() {
       const result = await wallet.signPersonalMessage({
         message: msgBytes,
       });
+      console.log("signMessage result", result);
+      console.log("wallet.account?.publicKey", wallet.account?.publicKey);
+      console.log(wallet.account?.publicKey as Uint8Array)
+      const addressBytes = new Uint8Array([
+        80,  21,  55,  26, 221,  20,  69,  78,
+        248, 212,  67,  30, 240,  65, 167,  87,
+        138, 106, 246,  81,  22, 195, 127, 118,
+        19,  43, 137, 209, 199, 155,   2, 245
+      ]);
       const verifyResult = await wallet.verifySignedMessage(
         result,
-        wallet.account.publicKey
+        addressBytes
       );
+      // convert addressBytes to publicKey
+
+      const pubKey = new Ed25519PublicKey(wallet.account?.publicKey as Uint8Array);
+      console.log("pubKey", pubKey.toSuiAddress());
+      console.log("pubKey", pubKey);
+      console.log("addressBytes", addressBytes);
+
+      const isValid = await pubKey.verify(msgBytes, result.signature);
+
+      console.log("verify signedMessage with pubKey", isValid);
       console.log("verify signedMessage", verifyResult);
       if (!verifyResult) {
         alert(`signMessage succeed, but verify signedMessage failed`);
